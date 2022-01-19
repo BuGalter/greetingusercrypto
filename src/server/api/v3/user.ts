@@ -4,9 +4,9 @@ import { output, } from '../../utils';
 import { users, } from '../../../storage/users-data';
 import { sessions, } from '../../../storage/users-sessions';
 import * as jwt from 'jsonwebtoken';
-import { decode } from 'querystring';
 
-const tokenKey = '1a2b-3c4d-5e6f-7g8h';
+const tokenKeyAccess = '1a2b-3c4d-5e6f-7g8h';
+const tokenKeyRefresh = '1a2b-3c4d-34tr-7g8h';
 
 function checkParams(payload) {
   if (!payload.username || !payload.password) {
@@ -25,28 +25,47 @@ function findUser(username, password) {
 }
 
 function createTokensJWT(sessionId, userId) {
-  const access = jwt.sign({ sessionId, userId, }, tokenKey, { expiresIn: 60 * 60, });
-  const refresh = jwt.sign({ sessionId, userId, }, tokenKey, { expiresIn: '10h', });
+  const access = jwt.sign({ sessionId, userId, }, tokenKeyAccess, { expiresIn: 60 * 60, });
+  const refresh = jwt.sign({ sessionId, userId, }, tokenKeyRefresh, { expiresIn: '10h', });
   return { access, refresh, };
 }
 
-function decodeJwt(token: string) {
+function decodeTokenJwt(token: string) {
   try {
-    return jwt.verify(token, tokenKey);
+    return jwt.verify(token, tokenKeyAccess);
   } catch (e) {
     console.log(e);
   }
 }
 
-export async function greetingUser(r) {
-  const len: number = users.length;
-  for (let i = 0; i < len; i += 1) {
-    if (users[i].id === r.params.id) {
-      return output({ message: `Hi, ${ users[i].username }!`, });
+function validateSession(token: string) {
+  const data = decodeTokenJwt(token);
+  for (let i = 0; i < sessions.length; i += 1) {
+    if (data.sessionId === sessions[i].id && data.userId === sessions[i].userId) {
+      return { isValide: true, userId: sessions[i].userId, };
     }
   }
 
-  return output({ message: 'User undifened', });
+  return { isValide: false, };
+}
+
+export async function greetingUser(r) {
+  console.log(r.headers);
+  const token = r.headers.authorization;
+  if (!token) {
+    return output({ message: 'Access denied!', });
+  }
+
+  const valide = validateSession(token);
+  if (valide.isValide) {
+    for (let i = 0; i < users.length; i += 1) {
+      if (users[i].id === valide.userId) {
+        return output({ message: `Hi, ${ users[i].username }!`, });
+      }
+    }
+  }
+
+  return output({ message: 'Access denied!', });
 }
 
 export async function userRegistration(r) {

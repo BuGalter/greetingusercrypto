@@ -13,7 +13,7 @@ export default [
   },
   {
     method: 'GET',
-    path: '/v3/user/{id}',
+    path: '/v3/user',
     handler: greetingUser,
   }
 ];
