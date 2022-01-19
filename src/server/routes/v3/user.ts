@@ -7,6 +7,11 @@ export default [
     handler: userRegistration,
   },
   {
+    method: 'POST',
+    path: '/v3/user/login',
+    handler: userRegistration,
+  },
+  {
     method: 'GET',
     path: '/v3/user/{id}',
     handler: greetingUser,
