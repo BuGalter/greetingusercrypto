@@ -4,6 +4,7 @@ import { output, } from '../../utils';
 import { users, } from '../../../storage/users-data';
 import { sessions, } from '../../../storage/users-sessions';
 import * as jwt from 'jsonwebtoken';
+import { decode } from 'querystring';
 
 const tokenKey = '1a2b-3c4d-5e6f-7g8h';
 
@@ -27,6 +28,14 @@ function createTokensJWT(sessionId, userId) {
   const access = jwt.sign({ sessionId, userId, }, tokenKey, { expiresIn: 60 * 60, });
   const refresh = jwt.sign({ sessionId, userId, }, tokenKey, { expiresIn: '10h', });
   return { access, refresh, };
+}
+
+function decodeJwt(token: string) {
+  try {
+    return jwt.verify(token, tokenKey);
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 export async function greetingUser(r) {
@@ -65,7 +74,7 @@ export async function userAuth(r) {
       const session = createSession(user.id);
       sessions.push(session);
       const tokens = createTokensJWT(session.id, session.userId);
-      return output({message: `${tokens.access} ${tokens.refresh}`, });
+      return output({message: `Access Token: ${tokens.access} Refresh Token: ${tokens.refresh}`, });
     }
 
     return output({ message: 'User not found!', });
