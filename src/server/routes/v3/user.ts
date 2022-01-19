@@ -1,4 +1,4 @@
-import { greetingUser, userRegistration, } from '../../api/v3/user';
+import { greetingUser, userRegistration, userLogging, } from '../../api/v3/user';
 
 export default [
   {
@@ -9,7 +9,7 @@ export default [
   {
     method: 'POST',
     path: '/v3/user/login',
-    handler: userRegistration,
+    handler: userLogging,
   },
   {
     method: 'GET',

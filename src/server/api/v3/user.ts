@@ -2,13 +2,24 @@ import { createUser, } from '../../models/v3User';
 import { createSession, } from '../../models/v3Session';
 import { output, } from '../../utils';
 import { users, } from '../../../storage/users-data';
+import { sessions, } from '../../../storage/users-sessions';
 
-function checkParams(reqPayload) {
-  if (!reqPayload.username || !reqPayload.password) {
+function checkParams(payload) {
+  if (!payload.username || !payload.password) {
     return false;
   }
 
   return true;
+}
+
+function findUser(username, password) {
+  for (let i = 0; i < users.length; i += 1) {
+    if (users[i].username === username && users[i].password === password) {
+      return users[i];
+    }
+  }
+
+  return false;
 }
 
 export async function greetingUser(r) {
@@ -23,19 +34,18 @@ export async function greetingUser(r) {
 }
 
 export async function userRegistration(r) {
-  const reqPayload = r.payload;
-  if (checkParams(reqPayload)) {
-    for (let index = 0; index < users.length; index += 1) {
-      if (users[index].username === reqPayload.username
-        && users[index].password === reqPayload.password) {
-        return output({ message: `Hi, ${ users[index].username }!`, });
-      }
+  const payload = r.payload;
+  if (checkParams(payload)) {
+    if (!findUser(payload.username, payload.password)) {
+      users.push(createUser(payload.username, payload.password));
+      return output({ message: `${ payload.username } added!`, });
     }
 
-    users.push(createUser(reqPayload.username, reqPayload.password));
-    return output({ message: 'User added!', });
+    return output({ message: `Hi, ${ payload.username }!`, });
   }
 
-  console.log(users);
-  return output({message: 'Wrong username or password!'});
+  return output({ message: 'Wrong password or login!', });
+}
+
+export async function userLogging(r) {
 }
