@@ -3,6 +3,9 @@ import { createSession, } from '../../models/v3Session';
 import { output, } from '../../utils';
 import { users, } from '../../../storage/users-data';
 import { sessions, } from '../../../storage/users-sessions';
+import * as jwt from 'jsonwebtoken';
+
+const tokenKey = '1a2b-3c4d-5e6f-7g8h';
 
 function checkParams(payload) {
   if (!payload.username || !payload.password) {
@@ -18,6 +21,12 @@ function findUser(username, password) {
       return users[i];
     }
   }
+}
+
+function createTokensJWT(sessionId, userId) {
+  const access = jwt.sign({ sessionId, userId, }, tokenKey, { expiresIn: 60 * 60, });
+  const refresh = jwt.sign({ sessionId, userId, }, tokenKey, { expiresIn: '10h', });
+  return { access, refresh, };
 }
 
 export async function greetingUser(r) {
@@ -55,7 +64,8 @@ export async function userAuth(r) {
     if (user !== undefined) {
       const session = createSession(user.id);
       sessions.push(session);
-      return output({message: `${session.id} ${session.userId}`, });
+      const tokens = createTokensJWT(session.id, session.userId);
+      return output({message: `${tokens.access} ${tokens.refresh}`, });
     }
 
     return output({ message: 'User not found!', });
