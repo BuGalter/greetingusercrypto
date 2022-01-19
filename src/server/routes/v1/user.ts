@@ -1,5 +1,5 @@
 import * as Joi from 'joi';
-import { addAvatar, getAvatar, getUser, greetingUser, } from '../../api/v1/user';
+import { addAvatar, getAvatar, getUser, } from '../../api/v1/user';
 import config from '../../config/config';
 import { outputOkSchema, } from '../../schemes';
 
@@ -19,11 +19,6 @@ export default [
         ),
       },
     },
-  },
-  {
-    method: 'GET',
-    path: '/v1/user/{id}',
-    handler: greetingUser,
   },
   {
     method: 'GET',

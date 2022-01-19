@@ -1,17 +1,6 @@
 import { User, } from '../../models/User';
 import { UserAvatar, } from '../../models/UserAvatar';
 import { error, output, saveImage, } from '../../utils';
-import { users, } from '../../../storage/users-data';
-
-export async function greetingUser(r) {
-  const len: number = users.length;
-  for (let i = 0; i < len; i += 1) {
-    if (users[i].id === r.params.id) {
-      return output({ message: `Hi, ${ users[i].name } ${ users[i].surname }!`, });
-    }
-  };
-  return output({ message: 'User undifened', });
-}
 
 export async function getUser(r) {
   return output({ firstName: 'John', });
