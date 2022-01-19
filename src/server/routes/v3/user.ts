@@ -1,4 +1,4 @@
-import { greetingUser, userRegistration, userLogging, } from '../../api/v3/user';
+import { greetingUser, userRegistration, userAuth, } from '../../api/v3/user';
 
 export default [
   {
@@ -8,8 +8,8 @@ export default [
   },
   {
     method: 'POST',
-    path: '/v3/user/login',
-    handler: userLogging,
+    path: '/v3/user/auth',
+    handler: userAuth,
   },
   {
     method: 'GET',

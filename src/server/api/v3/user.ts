@@ -18,8 +18,6 @@ function findUser(username, password) {
       return users[i];
     }
   }
-
-  return false;
 }
 
 export async function greetingUser(r) {
@@ -36,16 +34,30 @@ export async function greetingUser(r) {
 export async function userRegistration(r) {
   const payload = r.payload;
   if (checkParams(payload)) {
-    if (!findUser(payload.username, payload.password)) {
-      users.push(createUser(payload.username, payload.password));
-      return output({ message: `${ payload.username } added!`, });
+    if (findUser(payload.username, payload.password)) {
+      console.log(users);
+      return output({ message: `Hi, ${ payload.username }!`, });
     }
 
-    return output({ message: `Hi, ${ payload.username }!`, });
+    users.push(createUser(payload.username, payload.password));
+    console.log(users);
+    return output({ message: `${ payload.username } added!`, });
   }
 
+  console.log(users);
   return output({ message: 'Wrong password or login!', });
 }
 
-export async function userLogging(r) {
+export async function userAuth(r) {
+  const payload = r.payload;
+  if (checkParams(payload)) {
+    const user = findUser(payload.username, payload.password);
+    if (user !== undefined) {
+      const session = createSession(user.id);
+      sessions.push(session);
+      return output({message: `${session.id} ${session.userId}`, });
+    }
+
+    return output({ message: 'User not found!', });
+  }
 }
