@@ -2,21 +2,17 @@ import { DataTypes, Model, } from 'sequelize';
 import { getUUID, } from '../../utils';
 import sequelize from './db';
 
-class User extends Model {}
+class Session extends Model {}
 
-User.init({
+Session.init({
   id: {
     type: DataTypes.STRING,
     primaryKey: true,
     defaultValue: () => getUUID(),
     allowNull: false,
   },
-  userName: {
+  userId: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-}, { sequelize, modelName: 'User', });
+}, { sequelize, modelName: 'Session', });
