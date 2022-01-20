@@ -1,20 +1,10 @@
 import { createUser, } from '../../models/v3User';
 import { createSession, } from '../../models/v3Session';
-import { output, } from '../../utils';
+import { output, error, } from '../../utils';
 import { users, } from '../../../storage/users-data';
 import { sessions, } from '../../../storage/users-sessions';
-import * as jwt from 'jsonwebtoken';
-
-const tokenKeyAccess = '1a2b-3c4d-5e6f-7g8h';
-const tokenKeyRefresh = '1a2b-3c4d-34tr-7g8h';
-
-async function checkParams(payload) {
-  if (!payload.username || !payload.password) {
-    return false;
-  }
-
-  return true;
-}
+import { decodeTokenJwt, createTokensJWT, } from '../../utils/v3/token';
+import { checkParams, } from '../../utils/v3/validate';
 
 async function findUser(username, password) {
   for (let i = 0; i < users.length; i += 1) {
@@ -24,22 +14,12 @@ async function findUser(username, password) {
   }
 }
 
-async function createTokensJWT(sessionId, userId) {
-  const access = jwt.sign({ sessionId, userId, }, tokenKeyAccess, { expiresIn: 60 * 60, });
-  const refresh = jwt.sign({ sessionId, userId, }, tokenKeyRefresh, { expiresIn: '10h', });
-  return { access, refresh, };
-}
-
-async function decodeTokenJwt(token: string) {
-  try {
-    return jwt.verify(token, tokenKeyAccess);
-  } catch (e) {
-    console.log(e);
-  }
-}
-
 async function validateSession(token: string) {
   const data = await decodeTokenJwt(token);
+  if (!data) {
+    return { isValide: false, };
+  }
+
   for (let i = 0; i < sessions.length; i += 1) {
     if (data.sessionId === sessions[i].id && data.userId === sessions[i].userId) {
       return { isValide: true, userId: sessions[i].userId, };
@@ -52,7 +32,7 @@ async function validateSession(token: string) {
 export async function greetingUser(r) {
   const token = r.headers.authorization;
   if (!token) {
-    return output({ message: 'Access denied!', });
+    return error(403000, 'Access denied!', null);
   }
 
   const valide = await validateSession(token);
@@ -64,7 +44,7 @@ export async function greetingUser(r) {
     }
   }
 
-  return output({ message: 'Access denied!', });
+  return error(403000, 'Access denied!', null);
 }
 
 export async function userRegistration(r) {
@@ -77,7 +57,7 @@ export async function userRegistration(r) {
     return output({ message: `${ r.payload.username } added!`, });
   }
 
-  return output({ message: 'Wrong password or login!', });
+  return error(403000, 'Wrong password or login!', null);
 }
 
 export async function userAuth(r) {
@@ -90,6 +70,8 @@ export async function userAuth(r) {
       return output({message: `Access Token: ${tokens.access} Refresh Token: ${tokens.refresh}`, });
     }
 
-    return output({ message: 'User not found!', });
+    return error(404000, 'User not found!', null);
   }
+
+  return error(404000, 'User not found!', null);
 }
