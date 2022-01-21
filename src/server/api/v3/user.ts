@@ -4,6 +4,10 @@ import { checkParams, validateSession, } from '../../utils/v3/validate';
 import { addDbUser, addDbSession, findDbUser, findDbUseById, } from '../../utils/v3/db';
 
 export async function greetingUser(r) {
+  /**
+   * Handler for route user.
+   * @param {request} r - Request object.
+   */
   const token = r.headers.authorization;
   if (!token) {
     return error(403000, 'Access denied!', null);
@@ -12,6 +16,10 @@ export async function greetingUser(r) {
   const valide = await validateSession(token);
   if (valide.isValide) {
     const userName = await findDbUseById(valide.userId);
+    if (!userName) {
+      return error(403000, 'Access denied!', null);
+    }
+
     return output({ message: `Hi, ${ userName }!`, });
   }
 
@@ -19,6 +27,10 @@ export async function greetingUser(r) {
 }
 
 export async function userRegistration(r) {
+  /**
+   * Handler for route user/reg.
+   * @param {request} r - Request object.
+   */
   const paramsCorrect = await checkParams(r.payload);
   if (!paramsCorrect) {
     return error(403000, 'Wrong password or login!', null);
@@ -38,6 +50,10 @@ export async function userRegistration(r) {
 }
 
 export async function userAuth(r) {
+  /**
+   * Handler for route user/auth.
+   * @param {request} r - Request object.
+   */
   const paramsCorrect = await checkParams(r.payload);
   if (!paramsCorrect) {
     return error(403000, 'Wrong password or login!', null);
