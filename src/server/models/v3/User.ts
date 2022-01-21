@@ -2,7 +2,7 @@ import { DataTypes, Model, } from 'sequelize';
 import { getUUID, } from '../../utils';
 import sequelize from './db';
 
-class User extends Model {}
+export class User extends Model {}
 
 User.init({
   id: {
