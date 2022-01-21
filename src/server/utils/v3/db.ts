@@ -1,37 +1,44 @@
-import sequelize from '../../models/v3/db';
 import { User, } from '../../models/v3/User';
 import { Session, } from '../../models/v3/Session';
 
-async function tryDb() {
+export async function addDbUser(userName: string, password: string): Promise<boolean> {
   try {
-    await sequelize.authenticate();
-    console.log('Connection has been established successfully.');
-  }
-  catch (error) {
-    console.error('Unable to connect to the database:', error);
-    sequelize.close();
-    console.log('Connection has been destroy successfully.');
-  }
-}
-
-export async function addBD(modelAndData) {
-  tryDb();
-  if (modelAndData.model === 'user') {
-    const newUser = await User.create(
-      { userName: modelAndData.userName, password: modelAndData.password, }
-    );
-
+    const newUser = await User.create({ userName, password, });
     console.log(newUser);
     return true;
   }
+  catch (error) {
+    console.log('Error to add user to db', error);
+    return false;
+  }
+}
 
-  if (modelAndData.model === 'session') {
-    const newSession = await Session.create(
-      { userId: modelAndData.userId, }
-    );
+export async function addDbSession(userId: string) {
+  try {
+    const newSession = await Session.create({ userId, });
     console.log(newSession);
-    return true;
+    return newSession.getDataValue('id');
+  }
+  catch (error) {
+    console.log('Error to add user to db', error);
+    return false;
+  }
+}
+
+export async function findDbUser(userName: string, password: string) {
+  const user = await User.findOne({ where: { userName, password, }, });
+  if (!user) {
+    return false;
   }
 
-  return false;
+  return user.getDataValue('id');
+}
+
+export async function findDbUseById(userId: string) {
+  const user = await User.findByPk(userId);
+  if (!user) {
+    return false;
+  }
+
+  return user.getDataValue('userName');
 }
