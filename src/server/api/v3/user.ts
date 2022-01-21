@@ -1,33 +1,7 @@
-import { createUser, } from '../../models/v3User';
-import { createSession, } from '../../models/v3Session';
 import { output, error, } from '../../utils';
-import { users, } from '../../../storage/users-data';
-import { sessions, } from '../../../storage/users-sessions';
-import { decodeTokenJwt, createTokensJWT, } from '../../utils/v3/token';
-import { checkParams, } from '../../utils/v3/validate';
-
-async function findUser(username, password) {
-  for (let i = 0; i < users.length; i += 1) {
-    if (users[i].username === username && users[i].password === password) {
-      return users[i];
-    }
-  }
-}
-
-async function validateSession(token: string) {
-  const data = await decodeTokenJwt(token);
-  if (!data) {
-    return { isValide: false, };
-  }
-
-  for (let i = 0; i < sessions.length; i += 1) {
-    if (data.sessionId === sessions[i].id && data.userId === sessions[i].userId) {
-      return { isValide: true, userId: sessions[i].userId, };
-    }
-  }
-
-  return { isValide: false, };
-}
+import { createTokensJWT, } from '../../utils/v3/token';
+import { checkParams, validateSession, } from '../../utils/v3/validate';
+import { addDbUser, addDbSession, findDbUser, findDbUseById, } from '../../utils/v3/db';
 
 export async function greetingUser(r) {
   const token = r.headers.authorization;
@@ -37,41 +11,48 @@ export async function greetingUser(r) {
 
   const valide = await validateSession(token);
   if (valide.isValide) {
-    for (let i = 0; i < users.length; i += 1) {
-      if (users[i].id === valide.userId) {
-        return output({ message: `Hi, ${ users[i].username }!`, });
-      }
-    }
+    const userName = await findDbUseById(valide.userId);
+    return output({ message: `Hi, ${ userName }!`, });
   }
 
   return error(403000, 'Access denied!', null);
 }
 
 export async function userRegistration(r) {
-  if (await checkParams(r.payload)) {
-    if (await findUser(r.payload.username, r.payload.password)) {
-      return output({ message: `Hi, ${ r.payload.username }!`, });
-    }
-
-    users.push(createUser(r.payload.username, r.payload.password));
-    return output({ message: `${ r.payload.username } added!`, });
+  const paramsCorrect = await checkParams(r.payload);
+  if (!paramsCorrect) {
+    return error(403000, 'Wrong password or login!', null);
   }
 
-  return error(403000, 'Wrong password or login!', null);
+  const userId = await findDbUser(r.payload.username, r.payload.password);
+  if (!userId) {
+    const user = await addDbUser(r.payload.username, r.payload.password);
+    if (!user) {
+      return error(500000, 'Server error!', null);
+    }
+
+    return output({ message: `User: ${ r.payload.username }, added!`, });
+  }
+
+  return output({ message: `Hi, ${ r.payload.username }!`, });
 }
 
 export async function userAuth(r) {
-  if (await checkParams(r.payload)) {
-    const user = await findUser(r.payload.username, r.payload.password);
-    if (user !== undefined) {
-      const session = createSession(user.id);
-      sessions.push(session);
-      const tokens = await createTokensJWT(session.id, session.userId);
-      return output({message: `Access Token: ${tokens.access} Refresh Token: ${tokens.refresh}`, });
-    }
+  const paramsCorrect = await checkParams(r.payload);
+  if (!paramsCorrect) {
+    return error(403000, 'Wrong password or login!', null);
+  }
 
+  const userId = await findDbUser(r.payload.username, r.payload.password);
+  if (!userId) {
     return error(404000, 'User not found!', null);
   }
 
-  return error(404000, 'User not found!', null);
+  const sessionId = await addDbSession(userId);
+  if (!sessionId) {
+    return error(500000, 'Server error!', null);
+  }
+
+  const tokens = await createTokensJWT(sessionId, userId);
+  return output({ message: `Access Token: ${tokens.access} Refresh Token: ${tokens.refresh}`, });
 }
