@@ -2,9 +2,9 @@ import { decodeTokenJwt, } from './token';
 
 export async function validateSession(token: string) {
   /**
-   * Return userId if available or not false.
+   * Determine the correctness of the data from the token.
    * @param {string} token - Token from user request.
-   * @returns {Object<boolean, string>}.
+   * @returns {Object<boolean, string, string>}.
    */
   const data = await decodeTokenJwt(token);
   if (data) {
@@ -16,6 +16,7 @@ export async function validateSession(token: string) {
 
 export async function checkParams(payload): Promise<boolean> {
   /**
+   * Check if the request body contains a password and username.
    * @param {object} payload - Request parameters.
    * @returns {boolean} Are there parameters username and password in the request.
    */
